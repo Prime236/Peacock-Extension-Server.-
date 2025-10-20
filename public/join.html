@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Peacock Sync Party</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #00aaff;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #chat {
+      border: 1px solid #00aaff;
+      border-radius: 10px;
+      padding: 10px;
+      width: 90%;
+      height: 60vh;
+      overflow-y: auto;
+      background-color: rgba(0, 0, 0, 0.7);
+      box-shadow: 0 0 15px #00aaff;
+      margin-bottom: 10px;
+    }
+
+    #msg {
+      width: 70%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #00aaff;
+      background: black;
+      color: #00aaff;
+      margin-right: 5px;
+    }
+
+    #send {
+      background-color: #00aaff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 15px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #send:hover {
+      background-color: #0088cc;
+    }
+
+    .msg {
+      margin: 5px 0;
+      padding: 5px;
+    }
+
+    .mine {
+      color: #00ffcc;
+      text-align: right;
+    }
+
+    .theirs {
+      color: #00aaff;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <h2>🎬 Peacock Sync Party</h2>
+  <div id="chat"></div>
+  <div>
+    <input type="text" id="msg" placeholder="Type a message..." />
+    <button id="send">Send</button>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    const ws = new WebSocket(`ws://localhost:3000/ws?token=${token}&role=client`);
+
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('msg');
+    const sendBtn = document.getElementById('send');
+
+    ws.onopen = () => {
+      chat.innerHTML += `<div class='msg mine'>✅ Connected to room ${token}</div>`;
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.chat) {
+        chat.innerHTML += `<div class='msg theirs'>💬 ${data.chat}</div>`;
+        chat.scrollTop = chat.scrollHeight;
+      }
+    };
+
+    sendBtn.onclick = () => {
+      const msg = input.value.trim();
+      if (!msg) return;
+      ws.send(JSON.stringify({ chat: msg }));
+      chat.innerHTML += `<div class='msg mine'>${msg}</div>`;
+      chat.scrollTop = chat.scrollHeight;
+      input.value = '';
+    };
+  </script>
+</body>
+</html>
